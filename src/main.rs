@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io;
 fn main() {
-    let mut departments: HashMap<String, Vec<String>> = HashMap::new();
+    let departments: HashMap<String, Vec<String>> = HashMap::new();
     // add_department(&mut departments, String::from("Marketing"));
     // add_employee(&mut departments, String::from("Marketing"), String::from("Amy"));
     main_menu(departments);
@@ -34,7 +34,7 @@ fn get_employees(location: &HashMap<String, Vec<String>>) -> Vec<String> {
 fn get_employees_in_department(location: &HashMap<String, Vec<String>>, deparement: &String) -> Option<Vec<String>> {
     let mut employees: Vec<String> = Vec::new();
     if let Some(loc) = location.get(deparement) {
-        for item in location.get(deparement).expect("Error") {
+        for item in loc {
             employees.push(item.to_string());
         }
         employees.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
