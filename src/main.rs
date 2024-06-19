@@ -22,7 +22,7 @@ fn add_employee(location: &mut HashMap<String, Vec<String>>, department: &String
 
 fn get_employees(location: &HashMap<String, Vec<String>>) -> Vec<String> {
     let mut all_employees: Vec<String> = Vec::new();
-    for (id, employee_list) in location {
+    for (_id, employee_list) in location {
         for item in employee_list {
             all_employees.push(item.to_string());
         }
@@ -44,6 +44,15 @@ fn get_employees_in_department(location: &HashMap<String, Vec<String>>, depareme
     }
 }
 
+fn get_all_departments(location: &HashMap<String, Vec<String>>) -> Vec<String> {
+    let mut all_departments: Vec<String> = Vec::new();
+    for (id, _employee_list) in location {
+        all_departments.push(id.to_string());
+    }
+    all_departments.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    all_departments
+}
+
 fn get_user_input() -> String {
     let mut input = String::new();
     io::stdin().read_line(&mut input).expect("Failed to read input");
@@ -55,6 +64,7 @@ enum MenuAction {
     AddEmpl,
     GetAll,
     GetDept,
+    AllDepts,
     Quit,
     Error,
 }
@@ -71,7 +81,8 @@ fn main_menu(mut departments: HashMap<String, Vec<String>>) {
     println!("Enter 2 to add an employee to a department.");
     println!("Enter 3 to list all employees.");
     println!("Enter 4 to list all employees in a department.");
-    println!("Enter 5 to quit program.");
+    println!("Enter 5 to list all departments.");
+    println!("Enter 6 to quit program.");
     match main_menu_ui_logic(&get_user_input()) {
         MenuAction::AddDept => {
             println!("\nEnter the department's name.");
@@ -117,7 +128,17 @@ fn main_menu(mut departments: HashMap<String, Vec<String>>) {
             }
             main_menu(departments);
         }
-        MenuAction::Quit => {}
+        MenuAction::AllDepts => {
+            println!("\nFollowing is a list of all departments.\n");
+            for i in get_all_departments(&departments) {
+                println!("{}", i);
+            }
+            println!("\n");
+            main_menu(departments);
+        }
+        MenuAction::Quit => {
+            println!("Quitting program.")
+        }
         MenuAction::Error => {
             println!("\nInvalid input.\n");
             main_menu(departments);
@@ -135,6 +156,8 @@ fn main_menu_ui_logic(input: &str) -> MenuAction {
     }else if input == "4" {
         return MenuAction::GetDept
     }else if input == "5" {
+        return MenuAction::AllDepts
+    }else if input == "6" {
         return MenuAction::Quit
     } else {
         return MenuAction::Error
