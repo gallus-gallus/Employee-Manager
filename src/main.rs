@@ -1,21 +1,22 @@
 use std::collections::HashMap;
 use std::io;
 fn main() {
-    let mut departements: HashMap<String, Vec<String>> = HashMap::new();
-    // add_departement(&mut departements, String::from("Marketing"));
-    // add_employee(&mut departements, String::from("Marketing"), String::from("Amy"));
-    main_menu(departements);
-    //println!("{:?}", departements);
+    let mut departments: HashMap<String, Vec<String>> = HashMap::new();
+    // add_department(&mut departments, String::from("Marketing"));
+    // add_employee(&mut departments, String::from("Marketing"), String::from("Amy"));
+    main_menu(departments);
+    //println!("{:?}", departments);
 }
-fn add_departement(location: &mut HashMap<String, Vec<String>>, departement_name: &String) {
-    location.entry((&departement_name).to_string()).or_insert_with(Vec::new);
+fn add_department(location: &mut HashMap<String, Vec<String>>, department_name: &String) {
+    location.entry((&department_name).to_string()).or_insert_with(Vec::new);
 }
 
-fn add_employee(location: &mut HashMap<String, Vec<String>>, departement: &String, employee_name: &String) {
-    if let Some(employees) = location.get_mut(&(departement).to_string()) {
+fn add_employee(location: &mut HashMap<String, Vec<String>>, department: &String, employee_name: &String) -> InAction {
+    if let Some(employees) = location.get_mut(&(department).to_string()) {
         employees.push((employee_name).to_string());
+        return InAction::Continue
     } else {
-        println!("This departement doesn't exist. Consider adding a new deparement.");
+        return InAction::Error
     }
 }
 
@@ -30,13 +31,17 @@ fn get_employees(location: &HashMap<String, Vec<String>>) -> Vec<String> {
     all_employees
 }
 
-fn get_employees_in_departement(location: &HashMap<String, Vec<String>>, deparement: &String) -> Vec<String> {
+fn get_employees_in_department(location: &HashMap<String, Vec<String>>, deparement: &String) -> Option<Vec<String>> {
     let mut employees: Vec<String> = Vec::new();
-    for item in location.get(deparement).expect("Error") {
-        employees.push(item.to_string());
+    if let Some(loc) = location.get(deparement) {
+        for item in location.get(deparement).expect("Error") {
+            employees.push(item.to_string());
+        }
+        employees.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+        return Option::Some(employees)
+    } else {
+        return Option::None
     }
-    employees.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
-    employees
 }
 
 fn get_user_input() -> String {
@@ -55,39 +60,67 @@ enum MenuAction {
 }
 
 enum InAction {
-    Contune (String),
-    Menu,
+    Continue,
+    Error,
 }
 
-fn main_menu(mut departements: HashMap<String, Vec<String>>) {
+fn main_menu(mut departments: HashMap<String, Vec<String>>) {
     println!("COMPANY EMPLOYEE MANAGER");
     println!("Menu:");
-    println!("Enter 1 to add a departement.");
-    println!("Enter 2 to add an employee to a departement.");
+    println!("Enter 1 to add a department.");
+    println!("Enter 2 to add an employee to a department.");
     println!("Enter 3 to list all employees.");
-    println!("Enter 4 to list all employees in a departement.");
+    println!("Enter 4 to list all employees in a department.");
     println!("Enter 5 to quit program.");
     match main_menu_ui_logic(&get_user_input()) {
         MenuAction::AddDept => {
-            departements = add_departement_ui(departements);
-            main_menu(departements);
+            println!("\nEnter the department's name.");
+            let depart = get_user_input();
+            add_department(&mut departments, &depart);
+            println!("A new department called {} has been added.\n", &depart);
+            main_menu(departments);
         }
         MenuAction::AddEmpl => {
-            departements = add_employee_ui(departements);
-            main_menu(departements);
+            println!("\nEnter the employee's name.");
+            let name = get_user_input();
+            println!("Enter the name of the employee's department.");
+            let depart = get_user_input();
+            match add_employee(&mut departments, &depart, &name) {
+                InAction::Continue => {
+                    println!("{} has been added to the {} department.\n", &name, &depart);
+                }
+                InAction::Error => {
+                    println!("\nThis department doesn't exist. Consider adding a new deparement.\n");
+                }
+            }
+            main_menu(departments);
         }
         MenuAction::GetAll => {
-            get_employees_ui(&departements);
-            main_menu(departements);
+            println!("\n Following is a list of all employees.\n");
+            for i in get_employees(&departments) {
+                println!("{}", i);
+            }
+            println!("\n");
+            main_menu(departments);
         }
         MenuAction::GetDept => {
-            get_employees_in_departement_ui(&departements);
-            main_menu(departements)
+            println!("\nEnter the department you wish to inspect.");
+            let dept = get_user_input();
+            if let Some(list) = get_employees_in_department(&departments, &dept) {
+                println!("\nFollowing is a list of all employees in the {} department.\n", dept);
+                for i in list {
+                    println!("{}", i);
+                }
+                println!("\n");
+            } else {
+                println!("\nDepartment \"{}\" was invalid. Please try again.\n", dept);
+            }
+            main_menu(departments);
         }
         MenuAction::Quit => {}
         MenuAction::Error => {
             println!("\nInvalid input.\n");
-            main_menu(departements);
+            main_menu(departments);
         }
     }
 }
@@ -106,40 +139,4 @@ fn main_menu_ui_logic(input: &str) -> MenuAction {
     } else {
         return MenuAction::Error
     }
-}
-
-fn add_departement_ui(mut departements: HashMap<String, Vec<String>>) -> HashMap<String, Vec<String>> {
-    println!("\nEnter the departement's name.");
-    let depart = get_user_input();
-    add_departement(&mut departements, &depart);
-    println!("A new departement called {} has been added.\n", &depart);
-    departements
-}
-
-fn add_employee_ui(mut departements: HashMap<String, Vec<String>>) -> HashMap<String, Vec<String>> {
-    println!("\nEnter the employee's name.");
-    let name = get_user_input();
-    println!("Enter the name of the employee's departement.");
-    let depart = get_user_input();
-    add_employee(&mut departements, &depart, &name);
-    println!("{} has been added to the {} departement.\n", &name, &depart);
-    departements
-}
-
-fn get_employees_ui(departments: &HashMap<String, Vec<String>>) {
-    println!("\n Following is a list of all employees.\n");
-    for i in get_employees(&departments) {
-        println!("{}", i);
-    }
-    println!("\n");
-}
-
-fn get_employees_in_departement_ui(departments: &HashMap<String, Vec<String>>) {
-    println!("\nEnter the departement you wish to inspect.");
-    let dept = get_user_input();
-    println!("\n Following is a list of all employees in the {} departement.\n", dept);
-    for i in get_employees_in_departement(&departments, &dept) {
-        println!("{}", i);
-    }
-    println!("\n");
 }
